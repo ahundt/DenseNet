@@ -11,7 +11,18 @@ from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 
-batch_size = 64
+
+import tensorflow as tf
+from keras.callbacks import TensorBoard
+from keras.callbacks import CSVLogger
+from keras.callbacks import ModelCheckpoint
+import datetime
+
+# http://stackoverflow.com/a/5215012/99379
+def timeStamped(fname, fmt='%Y-%m-%d-%H-%M-%S_{fname}'):
+    return datetime.datetime.now().strftime(fmt).format(fname=fname)
+
+batch_size = 32
 nb_classes = 10
 nb_epoch = 200
 
@@ -55,12 +66,18 @@ generator.fit(trainX, seed=0)
 # Load model
 model.load_weights("weights/DenseNet-40-12-CIFAR10.h5")
 print("Model loaded.")
+out_dir="weights/"
+#dirname = timeStamped(str(batch_size) + 'batch_cifar10_resnet')
+#tensorboard = TensorBoard(log_dir="weights/", histogram_freq=10, write_graph=True)
+#csv = CSVLogger(out_dir+dirname+'.csv', separator=',', append=True)
+model_checkpoint=ModelCheckpoint("weights/DenseNet-40-12-CIFAR10-tf.h5", monitor="val_acc", save_best_only=True,
+                                              save_weights_only=True,mode='auto')
 
-# model.fit_generator(generator.flow(trainX, Y_train, batch_size=batch_size), samples_per_epoch=len(trainX), nb_epoch=nb_epoch,
-#                    callbacks=[ModelCheckpoint("weights/DenseNet-40-12-CIFAR10.h5", monitor="val_acc", save_best_only=True,
-#                                               save_weights_only=True)],
-#                    validation_data=(testX, Y_test),
-#                    nb_val_samples=testX.shape[0], verbose=2)
+model.fit_generator(generator.flow(trainX, Y_train, batch_size=batch_size), samples_per_epoch=len(trainX), nb_epoch=nb_epoch,
+#                   callbacks =[tensorboard,csv,model_checkpoint],
+                   callbacks=[model_checkpoint],
+                   validation_data=(testX, Y_test),
+                   nb_val_samples=testX.shape[0], verbose=2)
 
 yPreds = model.predict(testX)
 yPred = np.argmax(yPreds, axis=1)
