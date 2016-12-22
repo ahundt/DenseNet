@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import os.path
+
 import densenet
 import numpy as np
 import sklearn.metrics as metrics
@@ -64,13 +66,15 @@ generator = ImageDataGenerator(rotation_range=15,
 generator.fit(trainX, seed=0)
 
 # Load model
-model.load_weights("weights/DenseNet-40-12-CIFAR10.h5")
-print("Model loaded.")
+weights_file="weights/DenseNet-40-12CIFAR10-tf.h5"
+if os.path.exists(weights_file):
+    model.load_weights(weights_file)
+    print("Model loaded.")
 out_dir="weights/"
 #dirname = timeStamped(str(batch_size) + 'batch_cifar10_resnet')
 #tensorboard = TensorBoard(log_dir="weights/", histogram_freq=10, write_graph=True)
 #csv = CSVLogger(out_dir+dirname+'.csv', separator=',', append=True)
-model_checkpoint=ModelCheckpoint("weights/DenseNet-40-12-CIFAR10-tf.h5", monitor="val_acc", save_best_only=True,
+model_checkpoint=ModelCheckpoint(weights_file, monitor="val_acc", save_best_only=True,
                                               save_weights_only=True,mode='auto')
 
 model.fit_generator(generator.flow(trainX, Y_train, batch_size=batch_size), samples_per_epoch=len(trainX), nb_epoch=nb_epoch,
